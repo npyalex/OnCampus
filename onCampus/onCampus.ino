@@ -19,13 +19,13 @@
 
 #include "config.h" // change local wifi settings in the config.h tab
 
-int flagPin = 7;      //  pin for the shape-memory alloy element
+int flagPin = 12;      //  pin for the shape-memory alloy element
 int PMW = 99;         //  value for limiting the power going into the shape-memory alloy
                       //  min 0 max 255
+                      //  change this depending on the size of your SMAs
 
 //monitor Adafruit IO Feeds
-AdafruitIO_Feed *arrived = io.feed("arrived"); 
-AdafruitIO_Feed *gone = io.feed.("gone");
+AdafruitIO_Group *group = io.group("OnCampus"); 
 
 void setup() {
   // any pin setup happens here
@@ -39,8 +39,8 @@ void setup() {
   io.connect();
 
   //run the function whenever a message is recieved from each feed
-  arrived->onMessage(theyArrived);
-  gone->onMessage(theyGone);
+  group->onMessage("OnCampus.arrived", theyArrived);
+  group->onMessage("OnCampus.gone", theyGone);
   
   while(io.status() < AIO_CONNECTED) {
     Serial.print(".");
@@ -51,8 +51,7 @@ void setup() {
   Serial.println();
   Serial.println(io.statusText());
 
-  // the information element is off by default
-  digitialWrite(flagPin, LOW);
+  group->get();
 }
 
 void loop() {
@@ -61,9 +60,20 @@ void loop() {
 }
 
 void theyArrived(AdafruitIO_Data *data){
-  digitalWrite(flagPin, PMW);
+  //when the Arrived data is received from Adafruit IO
+  //control the voltage being sent to the shape-memory alloy via transistor.
+  //Adjust the strength of the pulse-width modulation above
+//  int go = data->toInt();
+//  if (go==1){
+  analogWrite(flagPin, PMW);
+//  }
 }
 
 void theyGone(AdafruitIO_Data *data){
-  digitalWrite(flagPin, LOW);
+  //when the Gone data is received from Adafruit IO
+  //cut the flow of power and turn off the shape-memory alloy
+//  int go = data->toInt();
+//  if (go==1){
+  analogWrite(flagPin,0);
+//  }
 }
